@@ -37,7 +37,7 @@ final goNotifier = GoNotifier(
 
 ## Riverpod 3
 
-Since `0.1.0` this package depends on `hooks_riverpod: ^3.0.0`. If you are upgrading from `0.0.x`
+Since `0.0.18` this package depends on `hooks_riverpod: ^3.0.0`. If you are upgrading from `0.0.x`
 (which used Riverpod 2), note the following:
 
 - `ProviderListenable` moved to `package:hooks_riverpod/misc.dart` in Riverpod 3. It is re-exported
