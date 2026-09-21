@@ -1,5 +1,7 @@
 // Guarded Go Router library exports
 
+export 'package:hooks_riverpod/misc.dart' show ProviderListenable;
+
 export 'src/extensions.dart';
 export 'src/go_guard.dart';
 export 'src/go_notifier.dart';

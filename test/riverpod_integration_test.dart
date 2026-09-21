@@ -1,9 +1,21 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarded_go_router/guarded_go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+// `StateProvider` is a legacy provider as of Riverpod 3 and moved to `legacy.dart`.
+import 'package:hooks_riverpod/legacy.dart';
 
 // Example providers
 final authStateProvider = StateProvider<bool>((ref) => false);
+
+// Modern (non-legacy) equivalent, to cover the Riverpod 3 Notifier API.
+class AuthNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setAuthenticated({required bool value}) => state = value;
+}
+
+final authNotifierProvider = NotifierProvider<AuthNotifier, bool>(AuthNotifier.new);
 
 // Example guard implementation
 class TestAuthGuard extends GoGuard {
@@ -22,9 +34,9 @@ final goNotifierProvider = Provider.family<GoNotifier, List<ProviderListenable<O
 });
 
 void main() {
-  group('GoNotifier Riverpod 3.0 compatibility', () {
+  group('GoNotifier Riverpod 3 compatibility', () {
     test('accepts any ProviderListenable type', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer.test();
       final testProvider = StateProvider<int>((ref) => 0);
       final asyncProvider = FutureProvider<String>((ref) => 'test');
 
@@ -34,11 +46,10 @@ void main() {
       ]));
 
       expect(notifier.dependencies.length, 2);
-      container.dispose();
     });
 
     test('responds to provider changes', () async {
-      final container = ProviderContainer();
+      final container = ProviderContainer.test();
 
       final notifier = container.read(goNotifierProvider([authStateProvider]));
 
@@ -50,11 +61,24 @@ void main() {
       await Future.microtask(() {}); // Allow notifications to propagate
 
       expect(notificationCount, 1);
-      container.dispose();
     });
 
-    test('uses == operator for update filtering (Riverpod 3.0 behavior)', () async {
-      final container = ProviderContainer();
+    test('responds to changes of a modern NotifierProvider', () async {
+      final container = ProviderContainer.test();
+
+      final notifier = container.read(goNotifierProvider([authNotifierProvider]));
+
+      var notificationCount = 0;
+      notifier.addListener(() => notificationCount++);
+
+      container.read(authNotifierProvider.notifier).setAuthenticated(value: true);
+      await Future.microtask(() {});
+
+      expect(notificationCount, 1);
+    });
+
+    test('uses == operator for update filtering (Riverpod 3 behavior)', () async {
+      final container = ProviderContainer.test();
       final notifier = container.read(goNotifierProvider([authStateProvider]));
 
       var notificationCount = 0;
@@ -69,12 +93,10 @@ void main() {
       container.read(authStateProvider.notifier).state = true;
       await Future.microtask(() {});
       expect(notificationCount, 1);
-
-      container.dispose();
     });
 
     test('Guards can read from providers', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer.test();
       final guard = TestAuthGuard(container.read);
 
       expect(guard.passes(), false);
@@ -84,12 +106,10 @@ void main() {
 
       expect(guard.passes(), true);
       expect(guard.blocks(), false);
-
-      container.dispose();
     });
 
     test('Multiple provider types work with GoNotifier', () async {
-      final container = ProviderContainer();
+      final container = ProviderContainer.test();
       final counterProvider = StateProvider<int>((ref) => 0);
       final asyncProvider = FutureProvider<String>((ref) => 'data');
 
@@ -107,8 +127,20 @@ void main() {
       await Future.microtask(() {});
 
       expect(notificationCount, greaterThan(0));
+    });
 
-      container.dispose();
+    test('closes its subscriptions when disposed', () async {
+      final container = ProviderContainer.test();
+      final notifier = container.read(goNotifierProvider([authStateProvider]));
+
+      var notificationCount = 0;
+      notifier.addListener(() => notificationCount++);
+      notifier.dispose();
+
+      container.read(authStateProvider.notifier).state = true;
+      await Future.microtask(() {});
+
+      expect(notificationCount, 0);
     });
   });
 }

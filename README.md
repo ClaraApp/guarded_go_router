@@ -21,7 +21,7 @@ It accepts not only the standard routes (`GoRoute` and `ShellRoute`) but also so
 A helper class to supply to the `GoRouter`'s `refreshListenable`.
 Providers can be given to it, whose notifications trigger the reevaluation of the current route.
 
-**Note:** Compatible with Riverpod 3.0. Accepts any `ProviderListenable` type.
+**Note:** Requires Riverpod 3 (`hooks_riverpod: ^3.0.0`). Accepts any `ProviderListenable` type.
 
 ```dart
 final goNotifier = GoNotifier(
@@ -34,6 +34,22 @@ final goNotifier = GoNotifier(
   ],
 );
 ```
+
+## Riverpod 3
+
+Since `0.0.18` this package depends on `hooks_riverpod: ^3.0.0`. If you are upgrading from `0.0.x`
+(which used Riverpod 2), note the following:
+
+- `ProviderListenable` moved to `package:hooks_riverpod/misc.dart` in Riverpod 3. It is re-exported
+  from `package:guarded_go_router/guarded_go_router.dart`, so guards and `GoNotifier.dependencies`
+  keep working with only the `guarded_go_router` import.
+- `StateProvider`, `StateNotifierProvider` and `ChangeNotifierProvider` are legacy in Riverpod 3 and
+  moved to `package:hooks_riverpod/legacy.dart`. If your guards read them, add that import.
+- `Ref` no longer has a type parameter, so `GoNotifier(ref)` accepts the `Ref` of any provider.
+- Riverpod 3 filters updates with `==` rather than `identical`, so a dependency that emits an equal
+  value no longer refreshes the router. Make sure state objects you depend on implement `==`
+  the way you expect.
+- `GoNotifier` now closes its provider subscriptions in `dispose()`.
 
 ## Concepts
 
