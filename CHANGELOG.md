@@ -1,3 +1,10 @@
+## 0.1.0
+
+- feat!: migrate to Riverpod 3 (`hooks_riverpod: ^3.0.0`, `flutter_hooks: ^0.21.2`)
+- feat: re-export `ProviderListenable` (moved to `misc.dart` in Riverpod 3) from the package barrel
+- feat: `GoNotifier` closes its provider subscriptions on `dispose`
+- chore: require Dart >=3.10.0 and Flutter >=3.38.3
+
 ## 0.0.17
 
 - feat: RouteId data class
